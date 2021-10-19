@@ -5,6 +5,22 @@ provider "aws" {
 resource "aws_instance" "kaiocm-terraform-ec2" {
   ami = "ami-0c2d06d50ce30b442"
   instance_type = "t2.micro"
+
+#   user_data = <<-EOF
+#               #!/bin/bash
+#               echo "Hello, World" > index.html
+#               nohup busybox httpd -f -p 80 &
+#               EOF
+
+  user_data = <<-EOF
+    #!/bin/bash
+    yum update -y
+    yum install -y httpd
+    service httpd start
+    chkconfig httpd on   
+    echo "My web server configured with Terraform!" > /var/www/html/index.html # Create a file called index.html in the webserver's root directory 
+    EOF
+    
   subnet_id = "subnet-c2e2cd9a" # PRIVATE-AZ-2C
 
   vpc_security_group_ids = [aws_security_group.kaioc-terraform-sg.id]
@@ -30,6 +46,7 @@ resource "aws_security_group" "kaioc-terraform-sg" {
     protocol = "tcp"
     cidr_blocks = ["172.20.178.0/23","15.0.0.0/9","172.20.168.0/22"]
   }
+
   ingress {
     from_port = 22
     to_port = 22
@@ -45,4 +62,11 @@ resource "aws_security_group" "kaioc-terraform-sg" {
   tags = {
     Name = "kaioc-terraform-sg"
   }
+
+  #   ingress {
+#     from_port = 8080
+#     to_port = 8080
+#     protocol = "tcp"
+#     cidr_blocks = ["0.0.0.0/0"]
+#   }
 }
