@@ -114,7 +114,6 @@ output "alb_dns_name" {
  description = "The domain name of the load balancer"
 }
 
-
 # security group
 resource "aws_security_group" "kaioc-terraform-sg" {
   name = "kaioc-terraform-sg"
