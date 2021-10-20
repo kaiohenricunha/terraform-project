@@ -4,7 +4,8 @@ provider "aws" {
 
 # launch configuration
 resource "aws_launch_configuration" "kaiocm-terraform-lc" {
-  image_id = "ami-0c2d06d50ce30b442"
+  image_id = "ami-0c2d06d50ce30b442" 
+  # previous script didn't work of my AMI missing features
   instance_type = "t2.micro"
 
   user_data = <<-EOF
@@ -13,14 +14,14 @@ resource "aws_launch_configuration" "kaiocm-terraform-lc" {
     yum install -y httpd
     service httpd start
     chkconfig httpd on   
-    echo "My web server configured with Terraform!" > /var/www/html/index.html # Create a file called index.html in the webserver's root directory 
+    echo "My web server configured with Terraform!" > /var/www/html/index.html 
+    # Create a file called index.html in the webserver's root directory 
     EOF
 
-#   subnet_id = "subnet-c2e2cd9a" # PRIVATE-AZ-2C
-
+ # subnet_id = "subnet-c2e2cd9a" # PRIVATE-AZ-2C
   security_groups = [aws_security_group.kaioc-terraform-sg.id]
-  iam_instance_profile = "PingInstanceRole" # has some safety policies from hp
-
+  iam_instance_profile = "PingInstanceRole" 
+  # has some safety policies from hp
  lifecycle {
  create_before_destroy = true
  }
@@ -48,8 +49,14 @@ resource "aws_autoscaling_group" "kaiocm-terraform-asg" {
 resource "aws_lb" "kaioc-terraform-lb" {
  name = "kaiocm-terraform-lb"
  internal = true
+ # load balances HTTP and HTTPS traffic. Operates at
+ # the application layer (Layer 7) of the OSI model.
  load_balancer_type = "application"
+ # One subnet per Availabilty Zone or at least two for increased availability
+ # of load balancer 
  subnets = ["subnet-5f359a38", "subnet-4a32f303"]
+ # tells the aws_lb resource to use this security group via the
+ # security_groups argument
  security_groups = [aws_security_group.kaioc-terraform-sg.id,"sg-adb5a8d5"] #HP-Core
  enable_deletion_protection = false
 }
@@ -79,7 +86,8 @@ resource "aws_lb_target_group" "kaioc-terraform-tg" {
  port = 80
  protocol = "HTTP"
  vpc_id = "vpc-faf77d9d"
-
+ 
+ # sends an HTTP request to each instance periodically to check their health
  health_check {
    path = "/"
    protocol = "HTTP"
